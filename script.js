@@ -25,12 +25,12 @@ const colorPalette = [
     '#000000'  // Black
 ];
 
-// Initial settings
+// Initial settings - these will be updated from input fields when drawShape is called
 let currentShape = shapeSelect.value;
-let currentColor = colorPalette[0]; // Set initial color from palette
+let currentColor = colorPalette[0];
 let currentLineWidth = parseInt(lineWidthInput.value);
 let currentPolygonSides = parseInt(polygonSidesInput.value);
-let currentSize = parseInt(shapeSizeInput.value); // Read current size from input
+let currentSize = parseInt(shapeSizeInput.value);
 
 
 // --- Color Palette Initialization ---
@@ -51,8 +51,8 @@ function initializeColorPalette() {
             }
             // Add 'selected' to clicked swatch
             swatch.classList.add('selected');
-            currentColor = swatch.dataset.color; // Update current color
-            drawShape(); // Redraw shape with new color
+            currentColor = swatch.dataset.color; // Update current color state
+            // No redraw here, it will be handled by drawButton click if needed, or initial load
         });
         colorSwatchesContainer.appendChild(swatch);
     });
@@ -65,7 +65,7 @@ function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
     let y = cy;
     let step = Math.PI / spikes;
 
-    ctx.beginPath();
+    ctx.beginPath(); // Start a new path for the star
     ctx.moveTo(cx, cy - outerRadius);
     for (let i = 0; i < spikes; i++) {
         x = cx + Math.cos(rot) * outerRadius;
@@ -83,7 +83,7 @@ function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
 
 // Function to draw a regular polygon with 'sides' number of sides
 function drawPolygon(ctx, cx, cy, radius, sides) {
-    ctx.beginPath();
+    ctx.beginPath(); // Start a new path for the polygon
     // Start angle adjusted so a flat side is at the bottom for even number of sides,
     // or a point is at the top for odd number of sides (like triangle or pentagon)
     let startAngle = (sides % 2 === 0) ? Math.PI / sides : Math.PI / 2 * 3;
@@ -110,15 +110,17 @@ function updatePolygonSidesVisibility() {
 }
 
 function drawShape() {
-    // Clear the canvas first
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Get current values
+    // Crucially, update all current values when drawShape is called
     currentShape = shapeSelect.value;
+    // currentColor is updated by color swatch click directly
     currentSize = parseInt(shapeSizeInput.value);
     currentLineWidth = parseInt(lineWidthInput.value);
     currentPolygonSides = parseInt(polygonSidesInput.value);
 
+    // Clear the canvas first (essential to remove previous drawings and their borders)
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Set drawing styles BEFORE drawing the shape
     ctx.fillStyle = currentColor;
     ctx.strokeStyle = '#333'; // Always a dark border for visibility
     ctx.lineWidth = currentLineWidth;
@@ -137,7 +139,7 @@ function drawShape() {
     switch (currentShape) {
         case 'circle':
             const radiusC = currentSize / 2;
-            ctx.beginPath();
+            ctx.beginPath(); // Always start a new path
             ctx.arc(centerX, centerY, radiusC, 0, Math.PI * 2);
             ctx.fill();
             ctx.stroke(); // Draw border
@@ -151,8 +153,9 @@ function drawShape() {
             break;
         case 'square':
             const squareSide = currentSize;
+            // No beginPath/closePath for rect, it's a direct drawing method
             ctx.fillRect(centerX - squareSide / 2, centerY - squareSide / 2, squareSide, squareSide);
-            ctx.stroke(); // Draw border
+            ctx.strokeRect(centerX - squareSide / 2, centerY - squareSide / 2, squareSide, squareSide); // Use strokeRect for border
             propertiesTextLines.push(`Properties:`);
             propertiesTextLines.push(`- 4 equal sides`);
             propertiesTextLines.push(`- 4 right (90°) angles`);
@@ -164,7 +167,7 @@ function drawShape() {
             const rectWidth = currentSize * 1.5;
             const rectHeight = currentSize * 0.8;
             ctx.fillRect(centerX - rectWidth / 2, centerY - rectHeight / 2, rectWidth, rectHeight);
-            ctx.stroke(); // Draw border
+            ctx.strokeRect(centerX - rectWidth / 2, centerY - rectHeight / 2, rectWidth, rectHeight); // Use strokeRect for border
             propertiesTextLines.push(`Properties:`);
             propertiesTextLines.push(`- 4 sides`);
             propertiesTextLines.push(`- Opposite sides are equal`);
@@ -177,7 +180,7 @@ function drawShape() {
         case 'triangle':
             const triSideApprox = currentSize; // Approx side for formula given drawing method
             const triHeightApprox = triSideApprox * Math.sqrt(3) / 2; // Height of equilateral
-            drawPolygon(ctx, centerX, centerY, currentSize / 2, 3);
+            drawPolygon(ctx, centerX, centerY, currentSize / 2, 3); // drawPolygon already calls beginPath/closePath
             ctx.fill();
             ctx.stroke(); // Draw border
             propertiesTextLines.push(`Properties:`);
@@ -191,7 +194,7 @@ function drawShape() {
         case 'star':
             const innerRadiusS = currentSize / 2 * 0.4;
             const outerRadiusS = currentSize / 2;
-            drawStar(ctx, centerX, centerY, 5, outerRadiusS, innerRadiusS);
+            drawStar(ctx, centerX, centerY, 5, outerRadiusS, innerRadiusS); // drawStar already calls beginPath/closePath
             ctx.fill();
             ctx.stroke(); // Draw outline
             propertiesTextLines.push(`Properties:`);
@@ -210,7 +213,7 @@ function drawShape() {
             // Apothem of a regular polygon
             const apothem = (radiusP * Math.cos(Math.PI / numSides));
 
-            drawPolygon(ctx, centerX, centerY, radiusP, numSides);
+            drawPolygon(ctx, centerX, centerY, radiusP, numSides); // drawPolygon already calls beginPath/closePath
             ctx.fill();
             ctx.stroke(); // Draw border
             propertiesTextLines.push(`Properties:`);
@@ -221,7 +224,7 @@ function drawShape() {
             propertiesTextLines.push(`- Area: ${ (0.5 * numSides * sideLength * apothem).toFixed(1)} sq px `);
             break;
         case 'line':
-            ctx.beginPath();
+            ctx.beginPath(); // Always start a new path
             ctx.moveTo(centerX - currentSize, centerY);
             ctx.lineTo(centerX + currentSize, centerY);
             ctx.stroke(); // Lines only have stroke
@@ -233,6 +236,9 @@ function drawShape() {
     }
 
     // --- Draw Properties Text ---
+    // Ensure the text drawing also starts a fresh path if it uses path methods,
+    // although fillText doesn't directly use them. It's good practice for any complex drawing.
+    ctx.beginPath(); // Good habit to ensure a clean slate for text rendering properties
     ctx.fillStyle = '#333'; // Dark color for text
     ctx.font = '13px Arial';
     ctx.textAlign = 'right'; // Align text to the right
@@ -282,15 +288,18 @@ function downloadImage() {
 drawButton.addEventListener('click', drawShape);
 downloadButton.addEventListener('click', downloadImage);
 
+// Only update visibility on shape select, DO NOT draw shape on every input change
 shapeSelect.addEventListener('change', () => {
     updatePolygonSidesVisibility(); // Update visibility when shape changes
-    drawShape();
+    // drawShape() is NOT called here anymore
 });
-shapeSizeInput.addEventListener('input', drawShape);
-lineWidthInput.addEventListener('input', drawShape);
-polygonSidesInput.addEventListener('input', drawShape); // Listen for changes on polygon sides input
+
+// Remove these event listeners to prevent auto-drawing on input change
+// shapeSizeInput.addEventListener('input', drawShape);
+// lineWidthInput.addEventListener('input', drawShape);
+// polygonSidesInput.addEventListener('input', drawShape);
 
 // Initial setup
 initializeColorPalette(); // Initialize color swatches
 updatePolygonSidesVisibility(); // Set initial visibility
-drawShape(); // Draw initial shape
+drawShape(); // Draw initial shape when the page loads
