@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Shape Drawing Tool for Pupils | Create & Understand 2D Geometry</title>
+    <meta name="description" content="An easy-to-use online tool for pupils to draw and customize 2D shapes--circles, squares, polygons, rectangle. Visualize properties, formulas, and download your unique geometric creations.">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>2D Shape Drawer</h1>
+
+    <div class="controls">
+        <div>
+            <label for="shapeSelect">Select Shape:</label>
+            <select id="shapeSelect">
+                <option value="circle">Circle</option>
+                <option value="square">Square</option>
+                <option value="rectangle">Rectangle</option>
+                <option value="triangle">Triangle</option>
+                <option value="star">Star</option>
+                <option value="pentagon">Pentagon</option>
+                <option value="hexagon">Hexagon</option>
+                <option value="polygon">Polygon (N-gon)</option>
+                <option value="line">Line</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="shapeSize">Size:</label>
+            <input type="number" id="shapeSize" value="80" min="10" max="250">
+        </div>
+
+        <div>
+            <label for="lineWidth">Line Width (for Line/Outline):</label>
+            <input type="number" id="lineWidth" value="3" min="1" max="10">
+        </div>
+
+        <div id="polygonSidesControl">
+            <label for="polygonSides">Number of Sides:</label>
+            <input type="number" id="polygonSides" value="7" min="3" max="15">
+        </div>
+
+        <div class="color-palette">
+            <label>Select Color:</label>
+            <div id="colorSwatches">
+                </div>
+        </div>
+
+        <button id="drawButton">Draw Shape</button>
+        <button id="downloadButton">Download Image</button>
+    </div>
+
+    <canvas id="drawingCanvas" width="400" height="300"></canvas>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
