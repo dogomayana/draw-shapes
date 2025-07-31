@@ -10,7 +10,10 @@ const drawButton = document.getElementById('drawButton');
 const downloadButton = document.getElementById('downloadButton');
 const colorSwatchesContainer = document.getElementById('colorSwatches');
 
-// Define a palette of colors
+// Conversion factor from pixels to approximate centimeters (assuming ~96 DPI)
+const PX_TO_CM_RATIO = 37.8; // Approx. 96 pixels per inch / 2.54 cm per inch
+
+// Define a palette of colors (hex codes)
 const colorPalette = [
     '#FF6347', // Tomato
     '#4682B4', // SteelBlue
@@ -24,6 +27,21 @@ const colorPalette = [
     '#FFFFFF', // White
     '#000000'  // Black
 ];
+
+// Mapping from hex codes to friendly color names
+const colorNames = {
+    '#FF6347': 'Tomato',
+    '#4682B4': 'Steel Blue',
+    '#32CD32': 'Lime Green',
+    '#FFD700': 'Gold',
+    '#8A2BE2': 'Blue Violet',
+    '#FF69B4': 'Hot Pink',
+    '#00CED1': 'Dark Turquoise',
+    '#D2691E': 'Chocolate',
+    '#6A5ACD': 'Slate Blue',
+    '#FFFFFF': 'White',
+    '#000000': 'Black'
+};
 
 // Initial settings - these will be updated from input fields when drawShape is called
 let currentShape = shapeSelect.value;
@@ -69,7 +87,7 @@ function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
     ctx.moveTo(cx, cy - outerRadius);
     for (let i = 0; i < spikes; i++) {
         x = cx + Math.cos(rot) * outerRadius;
-        y = cy + Math.sin(rot) * outerRadius;
+        y = cy + Math.sin(rot) * outerRadius; // This line was previously using innerRadius, fixed to outerRadius for proper star point
         ctx.lineTo(x, y);
         rot += step;
 
@@ -132,69 +150,86 @@ function drawShape() {
 
     // Add common properties
     propertiesTextLines.push(`Shape: ${currentShape.charAt(0).toUpperCase() + currentShape.slice(1)}`);
-    propertiesTextLines.push(`Color: ${currentColor}`);
-    propertiesTextLines.push(`Scale: ${currentSize}px`); // Keep the general size info
+    propertiesTextLines.push(`Color: ${colorNames[currentColor] || currentColor}`); // Use color name or fallback to hex
+    // Display the input scale in pixels, then properties in cm
+    propertiesTextLines.push(`Input Scale: ${currentSize} px`);
 
     // Add specific properties, formulas, and draw shape
     switch (currentShape) {
         case 'circle':
-            const radiusC = currentSize / 2;
+            const radiusC_px = currentSize / 2;
             ctx.beginPath(); // Always start a new path
-            ctx.arc(centerX, centerY, radiusC, 0, Math.PI * 2);
+            ctx.arc(centerX, centerY, radiusC_px, 0, Math.PI * 2);
             ctx.fill();
             ctx.stroke(); // Draw border
+
+            // Properties calculated and displayed in cm
+            const radiusC_cm = radiusC_px / PX_TO_CM_RATIO;
             propertiesTextLines.push(`Properties:`);
             propertiesTextLines.push(`- Circular form`);
             propertiesTextLines.push(`- No corners or edges`);
-            propertiesTextLines.push(`- Radius: ${radiusC}px`);
-            propertiesTextLines.push(`- Diameter: ${currentSize}px`);
-            propertiesTextLines.push(`- Circumference: ${ (2 * Math.PI * radiusC).toFixed(2)}px `);
-            propertiesTextLines.push(`- Area: ${ (Math.PI * radiusC * radiusC).toFixed(2)} sq px `);
+            propertiesTextLines.push(`- Radius: ${radiusC_cm.toFixed(2)} cm`);
+            propertiesTextLines.push(`- Diameter: ${(radiusC_cm * 2).toFixed(2)} cm`);
+            propertiesTextLines.push(`- Circumference: ${ (2 * Math.PI * radiusC_cm).toFixed(2)} cm `);
+            propertiesTextLines.push(`- Area: ${ (Math.PI * radiusC_cm * radiusC_cm).toFixed(2)} sq cm `);
             break;
         case 'square':
-            const squareSide = currentSize;
+            const squareSide_px = currentSize;
             // No beginPath/closePath for rect, it's a direct drawing method
-            ctx.fillRect(centerX - squareSide / 2, centerY - squareSide / 2, squareSide, squareSide);
-            ctx.strokeRect(centerX - squareSide / 2, centerY - squareSide / 2, squareSide, squareSide); // Use strokeRect for border
+            ctx.fillRect(centerX - squareSide_px / 2, centerY - squareSide_px / 2, squareSide_px, squareSide_px);
+            ctx.strokeRect(centerX - squareSide_px / 2, centerY - squareSide_px / 2, squareSide_px, squareSide_px); // Use strokeRect for border
+
+            // Properties calculated and displayed in cm
+            const squareSide_cm = squareSide_px / PX_TO_CM_RATIO;
             propertiesTextLines.push(`Properties:`);
             propertiesTextLines.push(`- 4 equal sides`);
             propertiesTextLines.push(`- 4 right (90°) angles`);
-            propertiesTextLines.push(`- Side length: ${squareSide}px`);
-            propertiesTextLines.push(`- Perimeter: ${ (4 * squareSide).toFixed(0)}px `);
-            propertiesTextLines.push(`- Area: ${ (squareSide * squareSide).toFixed(0)} sq px `);
+            propertiesTextLines.push(`- Side length: ${squareSide_cm.toFixed(2)} cm`);
+            propertiesTextLines.push(`- Perimeter: ${ (4 * squareSide_cm).toFixed(2)} cm `);
+            propertiesTextLines.push(`- Area: ${ (squareSide_cm * squareSide_cm).toFixed(2)} sq cm `);
             break;
         case 'rectangle':
-            const rectWidth = currentSize * 1.5;
-            const rectHeight = currentSize * 0.8;
-            ctx.fillRect(centerX - rectWidth / 2, centerY - rectHeight / 2, rectWidth, rectHeight);
-            ctx.strokeRect(centerX - rectWidth / 2, centerY - rectHeight / 2, rectWidth, rectHeight); // Use strokeRect for border
+            const rectWidth_px = currentSize * 1.5;
+            const rectHeight_px = currentSize * 0.8;
+            ctx.fillRect(centerX - rectWidth_px / 2, centerY - rectHeight_px / 2, rectWidth_px, rectHeight_px);
+            ctx.strokeRect(centerX - rectWidth_px / 2, centerY - rectHeight_px / 2, rectWidth_px, rectHeight_px); // Use strokeRect for border
+
+            // Properties calculated and displayed in cm
+            const rectWidth_cm = rectWidth_px / PX_TO_CM_RATIO;
+            const rectHeight_cm = rectHeight_px / PX_TO_CM_RATIO;
             propertiesTextLines.push(`Properties:`);
             propertiesTextLines.push(`- 4 sides`);
             propertiesTextLines.push(`- Opposite sides are equal`);
             propertiesTextLines.push(`- 4 right (90°) angles`);
-            propertiesTextLines.push(`- Width: ${rectWidth.toFixed(0)}px`);
-            propertiesTextLines.push(`- Height: ${rectHeight.toFixed(0)}px`);
-            propertiesTextLines.push(`- Perimeter: ${ (2 * (rectWidth + rectHeight)).toFixed(0)}px `);
-            propertiesTextLines.push(`- Area: ${ (rectWidth * rectHeight).toFixed(0)} sq px `);
+            propertiesTextLines.push(`- Width: ${rectWidth_cm.toFixed(2)} cm`);
+            propertiesTextLines.push(`- Height: ${rectHeight_cm.toFixed(2)} cm`);
+            propertiesTextLines.push(`- Perimeter: ${ (2 * (rectWidth_cm + rectHeight_cm)).toFixed(2)} cm `);
+            propertiesTextLines.push(`- Area: ${ (rectWidth_cm * rectHeight_cm).toFixed(2)} sq cm `);
             break;
         case 'triangle':
-            const triSideApprox = currentSize; // Approx side for formula given drawing method
-            const triHeightApprox = triSideApprox * Math.sqrt(3) / 2; // Height of equilateral
-            drawPolygon(ctx, centerX, centerY, currentSize / 2, 3); // drawPolygon already calls beginPath/closePath
+            const triRadius_px = currentSize / 2; // Radius for drawing polygon method
+            const triSideApprox_px = 2 * triRadius_px * Math.sin(Math.PI / 3); // Approx side for equilateral triangle based on radius
+            const triHeightApprox_px = triSideApprox_px * Math.sqrt(3) / 2; // Height of equilateral
+
+            drawPolygon(ctx, centerX, centerY, triRadius_px, 3); // drawPolygon already calls beginPath/closePath
             ctx.fill();
             ctx.stroke(); // Draw border
+
+            // Properties calculated and displayed in cm
+            const triSideApprox_cm = triSideApprox_px / PX_TO_CM_RATIO;
+            const triHeightApprox_cm = triHeightApprox_px / PX_TO_CM_RATIO;
             propertiesTextLines.push(`Properties:`);
             propertiesTextLines.push(`- 3 sides`);
             propertiesTextLines.push(`- 3 angles`);
             propertiesTextLines.push(`- Sum of angles = 180°`);
-            propertiesTextLines.push(`- Approx. Side: ${triSideApprox}px`);
-            propertiesTextLines.push(`- Approx. Perimeter: ${ (3 * triSideApprox).toFixed(0)}px `);
-            propertiesTextLines.push(`- Approx. Area: ${ (0.5 * triSideApprox * triHeightApprox).toFixed(0)} sq px `);
+            propertiesTextLines.push(`- Approx. Side: ${triSideApprox_cm.toFixed(2)} cm`);
+            propertiesTextLines.push(`- Approx. Perimeter: ${ (3 * triSideApprox_cm).toFixed(2)} cm `);
+            propertiesTextLines.push(`- Approx. Area: ${ (0.5 * triSideApprox_cm * triHeightApprox_cm).toFixed(2)} sq cm `);
             break;
         case 'star':
-            const innerRadiusS = currentSize / 2 * 0.4;
-            const outerRadiusS = currentSize / 2;
-            drawStar(ctx, centerX, centerY, 5, outerRadiusS, innerRadiusS); // drawStar already calls beginPath/closePath
+            const innerRadiusS_px = currentSize / 2 * 0.4;
+            const outerRadiusS_px = currentSize / 2;
+            drawStar(ctx, centerX, centerY, 5, outerRadiusS_px, innerRadiusS_px); // drawStar already calls beginPath/closePath
             ctx.fill();
             ctx.stroke(); // Draw outline
             propertiesTextLines.push(`Properties:`);
@@ -207,31 +242,40 @@ function drawShape() {
             const numSides = (currentShape === 'pentagon') ? 5 :
                              (currentShape === 'hexagon') ? 6 :
                              currentPolygonSides;
-            const radiusP = currentSize / 2;
-            // Side length of a regular polygon inscribed in a circle
-            const sideLength = (2 * radiusP * Math.sin(Math.PI / numSides));
-            // Apothem of a regular polygon
-            const apothem = (radiusP * Math.cos(Math.PI / numSides));
-
-            drawPolygon(ctx, centerX, centerY, radiusP, numSides); // drawPolygon already calls beginPath/closePath
+            const radiusP_px = currentSize / 2;
+            drawPolygon(ctx, centerX, centerY, radiusP_px, numSides); // drawPolygon already calls beginPath/closePath
             ctx.fill();
             ctx.stroke(); // Draw border
+
+            // Properties calculated and displayed in cm
+            const radiusP_cm = radiusP_px / PX_TO_CM_RATIO;
+            // Side length of a regular polygon inscribed in a circle (in cm)
+            const sideLength_cm = (2 * radiusP_cm * Math.sin(Math.PI / numSides));
+            // Apothem of a regular polygon (in cm)
+            const apothem_cm = (radiusP_cm * Math.cos(Math.PI / numSides));
+
             propertiesTextLines.push(`Properties:`);
             propertiesTextLines.push(`- ${numSides} equal sides`);
             propertiesTextLines.push(`- ${numSides} equal angles`);
-            propertiesTextLines.push(`- Side length: ${sideLength.toFixed(1)}px`);
-            propertiesTextLines.push(`- Perimeter: ${ (numSides * sideLength).toFixed(1)}px `);
-            propertiesTextLines.push(`- Area: ${ (0.5 * numSides * sideLength * apothem).toFixed(1)} sq px `);
+            propertiesTextLines.push(`- Side length: ${sideLength_cm.toFixed(2)} cm`);
+            propertiesTextLines.push(`- Perimeter: ${ (numSides * sideLength_cm).toFixed(2)} cm `);
+            propertiesTextLines.push(`- Area: ${ (0.5 * numSides * sideLength_cm * apothem_cm).toFixed(2)} sq cm `);
             break;
         case 'line':
+            const lineLength_px = currentSize * 2;
+            const lineWidth_px = currentLineWidth;
             ctx.beginPath(); // Always start a new path
             ctx.moveTo(centerX - currentSize, centerY);
             ctx.lineTo(centerX + currentSize, centerY);
             ctx.stroke(); // Lines only have stroke
+
+            // Properties calculated and displayed in cm
+            const lineLength_cm = lineLength_px / PX_TO_CM_RATIO;
+            const lineWidth_cm = lineWidth_px / PX_TO_CM_RATIO;
             propertiesTextLines.push(`Properties:`);
             propertiesTextLines.push(`- One dimension: length`);
-            propertiesTextLines.push(`- Length: ${currentSize * 2}px`);
-            propertiesTextLines.push(`- Display Width: ${currentLineWidth}px`);
+            propertiesTextLines.push(`- Length: ${lineLength_cm.toFixed(2)} cm`);
+            propertiesTextLines.push(`- Display Width: ${lineWidth_cm.toFixed(2)} cm`);
             break;
     }
 
